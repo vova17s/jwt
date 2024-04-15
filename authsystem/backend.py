@@ -1,10 +1,9 @@
-from .models import User
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
 import jwt
 from django.conf import settings
-from rest_framework.exceptions import AuthenticationFailed
 from rest_framework import status
-from jwt_test.settings import SIMPLE_JWT
+from rest_framework.authentication import BaseAuthentication, get_authorization_header
+
+from .models import User
 
 
 class JWTAuthentication(BaseAuthentication):
@@ -34,17 +33,13 @@ class JWTAuthentication(BaseAuthentication):
         if len(auth_token) != 2:
             return None, False
         
-        prefix_header = auth_token[0]
         payload = auth_token[1]
         header = jwt.get_unverified_header(payload)
-        print(header['alg'])
-        if prefix_header != SIMPLE_JWT['AUTH_HEADER_TYPES']:
-            raise AuthenticationFailed('headder', status.HTTP_401_UNAUTHORIZED)
+
         try:
             decode_payload = jwt.decode(payload, settings.SECRET_KEY, header['alg'])
-            print(decode_payload)
         except jwt.ExpiredSignatureError:
-            raise TypeError('Signature ', status.HTTP_401_UNAUTHORIZED)
+            raise TypeError('Invalid token signature ', status.HTTP_401_UNAUTHORIZED)
         
         try:
             user = User.objects.get(pk=decode_payload["user_id"])

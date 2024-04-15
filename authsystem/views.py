@@ -1,31 +1,29 @@
-from django.shortcuts import render
-from rest_framework.generics import CreateAPIView, GenericAPIView
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.viewsets import ModelViewSet
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
+from rest_framework.generics import GenericAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from services import DefaultPagination
+
 from .backend import JWTAuthentication
 from .models import User
-from .serializers import RegisterUserSerializer, UserPresentationSerializer, CustomObtainPairSerializer
-
-
-class UserPagination(PageNumberPagination):
-    page_size = 50
-    max_page_size = 500
-    page_size_query_param = 'page_size'
+from .serializers import (
+    CustomObtainPairSerializer,
+    RegisterUserSerializer,
+    UserPresentationSerializer,
+)
 
 
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserPresentationSerializer
-    pagination_class = UserPagination
+    pagination_class = DefaultPagination
     permission_classes = (IsAuthenticated, )
 
-
 class SupportAPIView(GenericAPIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserPresentationSerializer
 
     def get(self, request) -> Response:
@@ -40,6 +38,7 @@ class UserRegistrationView(TokenObtainPairView):
     serializer_class = RegisterUserSerializer
     support_serializer = CustomObtainPairSerializer
     permission_classes = (AllowAny, )
+
     def post(self, request):
         data = self.serializer_class(data=request.data)
         if data.is_valid():

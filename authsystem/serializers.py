@@ -1,10 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.settings import api_settings
+
 from .models import User
-from .backend import JWTAuthentication
-from jwt_test.settings import SIMPLE_JWT
 
 
 class UserPresentationSerializer(serializers.ModelSerializer):
@@ -15,16 +12,26 @@ class UserPresentationSerializer(serializers.ModelSerializer):
 
 
 class RegisterUserSerializer(serializers.ModelSerializer):
-    is_active = serializers.ReadOnlyField()
-    is_staff = serializers.ReadOnlyField()
-    is_superuser = serializers.ReadOnlyField()
     password = serializers.CharField(
         max_length=128,
         min_length=8,
     )
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ("username", "email", "password")
+        extra_kwargs = {
+            'username': {'required': False},
+            "email": {'required': False},
+        } 
+
+    def validate(self, attrs):
+        request = self.context['request']
+
+        if request.data.get("username") is None and request.data.get("email") is None: 
+            raise AttributeError('Auth by username or email')
+
+        return super().validate(request.data)
+
 
     def create(self, validated_data):
         user = User.objects.create(**validated_data)
@@ -43,13 +50,12 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
             user_obj = User.objects.filter(username=attrs.get(self.username_field)).first()
         
         request = self.context['request']
-        request.data._mutable = True
+
         
         try:
             request.data['username']=user_obj.email
-        except:
+        except AttributeError:
             return AttributeError('afasdas')
         
-        request.data._mutable = False
         print(request.data)
         return super().validate(request.data)
