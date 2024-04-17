@@ -6,7 +6,12 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from .views import SupportAPIView, UserRegistrationView, UserViewSet
+from .views import (
+    ChangePasswordView,
+    SupportAPIView,
+    UserRegistrationView,
+    UserViewSet,
+)
 
 router = SimpleRouter()
 router.register('user', UserViewSet)
@@ -15,6 +20,7 @@ router.register('user', UserViewSet)
 urlpatterns = [
     path('register/', UserRegistrationView.as_view(), name='register_user'),
     path('user/', SupportAPIView.as_view(), name='support'),
+    path('change_password/', ChangePasswordView.as_view(), name='change_password'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('verify/', TokenVerifyView.as_view(), name='token_verify'),

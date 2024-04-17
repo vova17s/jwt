@@ -59,3 +59,12 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
         
         print(request.data)
         return super().validate(request.data)
+
+
+class UserPasswordChangeSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True, max_length=30, min_length=8)
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance

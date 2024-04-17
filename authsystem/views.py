@@ -1,3 +1,5 @@
+from tokenize import TokenError
+
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,6 +14,7 @@ from .models import User
 from .serializers import (
     CustomObtainPairSerializer,
     RegisterUserSerializer,
+    UserPasswordChangeSerializer,
     UserPresentationSerializer,
 )
 
@@ -47,3 +50,24 @@ class UserRegistrationView(TokenObtainPairView):
             serializer.is_valid(raise_exception=True)
             return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         return Response(data.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(GenericAPIView):
+    serializer_class = UserPasswordChangeSerializer
+    permission_classes = (IsAuthenticated, )
+    def get_user(self):
+        auth_class = JWTAuthentication()
+        return auth_class.authenticate(self.request)[0]
+    
+    def put(self, request, *args, **kwargs) -> Response:
+        user = self.get_user()
+        if user:
+            serializer = self.serializer_class(data=request.data, instance=user)
+        
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                return Response({'detail': 'Success change password'}, status.HTTP_202_ACCEPTED)
+            
+            return Response({'detail': 'Denied change password'}, status.HTTP_400_BAD_REQUEST)
+                
+        raise TokenError({'detail': "Not a valid token"}, status.HTTP_400_BAD_REQUEST)
