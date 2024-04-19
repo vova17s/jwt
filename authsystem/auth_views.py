@@ -1,14 +1,15 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
-from rest_framework_simplejwt.views import TokenObtainPairView
-
-from services import DefaultPagination
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView,
+)
 
 from .backend import JWTAuthentication
-from .models import User
 from .serializers import (
     CustomObtainPairSerializer,
     RegisterUserSerializer,
@@ -17,13 +18,7 @@ from .serializers import (
 )
 
 
-class UserViewSet(ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserPresentationSerializer
-    pagination_class = DefaultPagination
-    permission_classes = (IsAuthenticated, )
-
-
+@extend_schema(tags=['Auth'])
 class SupportAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserPresentationSerializer
@@ -35,6 +30,7 @@ class SupportAPIView(GenericAPIView):
         return Response({"detail": "No user"}, 401)
 
 
+@extend_schema(tags=['Auth'])
 class UserRegistrationView(TokenObtainPairView):
     serializer_class = RegisterUserSerializer
     support_serializer = CustomObtainPairSerializer
@@ -50,6 +46,7 @@ class UserRegistrationView(TokenObtainPairView):
         return Response(data.errors, status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(tags=['Auth'])
 class ChangePasswordView(GenericAPIView):
     serializer_class = UserPasswordChangeSerializer
     permission_classes = (IsAuthenticated, )
@@ -69,3 +66,18 @@ class ChangePasswordView(GenericAPIView):
         serializer.save()
 
         return Response({'detail': 'Not a valid token'}, status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(tags=['Auth'])
+class LoginAPIView(TokenObtainPairView):
+    ...
+
+
+@extend_schema(tags=['Auth'])
+class RefreshAPIView(TokenRefreshView):
+    ...
+
+
+@extend_schema(tags=['Auth'])
+class VerifyAPIView(TokenVerifyView):
+    ...

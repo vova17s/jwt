@@ -2,6 +2,7 @@ from datetime import timedelta
 from os import getenv as env
 from pathlib import Path
 
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -221,4 +222,19 @@ SIMPLE_JWT = {
     "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
     "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'SERVE_PERMISSIONS': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'SERVE_AUTHENTICATION': ["authsystem.backend.JWTAuthentication"]
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Spring hack API",
+    "DESCRIPTION": "Various APIs for Test service",
+    "VERSION": "1.0.0",
+    "EXCLUDE_PATH": [reverse_lazy("schema")],
 }
