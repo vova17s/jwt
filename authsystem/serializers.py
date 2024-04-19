@@ -24,15 +24,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
             "email": {'required': False},
         } 
 
-    def validate(self, attrs):
-        request = self.context['request']
-
-        if request.data.get("username") is None and request.data.get("email") is None: 
-            raise AttributeError('Auth by username or email')
-
-        return super().validate(request.data)
-
-
     def create(self, validated_data):
         user = User.objects.create(**validated_data)
         user.set_password(validated_data['password'])
@@ -51,11 +42,18 @@ class CustomObtainPairSerializer(TokenObtainPairSerializer):
         
         request = self.context['request']
 
-        
         try:
             request.data['username']=user_obj.email
         except AttributeError:
-            return AttributeError('afasdas')
-        
-        print(request.data)
+            return AttributeError('Phoshol na hui')
+
         return super().validate(request.data)
+
+
+class UserPasswordChangeSerializer(serializers.Serializer):
+    password = serializers.CharField(required=True, max_length=30, min_length=8)
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['password'])
+        instance.save()
+        return instance

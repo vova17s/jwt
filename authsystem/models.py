@@ -16,7 +16,6 @@ class UserManager(BaseUserManager):
                 setattr(user, field, value)
         
         user.set_password(password)
-        user.set_password(password)
         user.save()
         
         return user

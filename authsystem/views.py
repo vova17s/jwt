@@ -12,6 +12,7 @@ from .models import User
 from .serializers import (
     CustomObtainPairSerializer,
     RegisterUserSerializer,
+    UserPasswordChangeSerializer,
     UserPresentationSerializer,
 )
 
@@ -22,16 +23,16 @@ class UserViewSet(ModelViewSet):
     pagination_class = DefaultPagination
     permission_classes = (IsAuthenticated, )
 
+
 class SupportAPIView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = UserPresentationSerializer
 
     def get(self, request) -> Response:
-        auth_class = JWTAuthentication()
-        user, success = auth_class.authenticate(request)
-        if success:
-            return Response(self.serializer_class(user).data, 200)
-        return Response({"detail": "Invalid data"}, 404)
+        if request.user:
+            return Response(self.serializer_class(request.user).data, 200)
+
+        return Response({"detail": "No user"}, 401)
 
 
 class UserRegistrationView(TokenObtainPairView):
@@ -47,3 +48,24 @@ class UserRegistrationView(TokenObtainPairView):
             serializer.is_valid(raise_exception=True)
             return Response(serializer.validated_data, status=status.HTTP_201_CREATED)
         return Response(data.errors, status.HTTP_400_BAD_REQUEST)
+
+
+class ChangePasswordView(GenericAPIView):
+    serializer_class = UserPasswordChangeSerializer
+    permission_classes = (IsAuthenticated, )
+    auth_backend = JWTAuthentication()
+
+    def post(self, request, *args, **kwargs) -> Response:
+        user = request.user
+
+        if not user:
+            return Response({'detail': 'Denied change password'}, status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.serializer_class(data=request.data, instance=user)
+
+        if not serializer.is_valid(raise_exception=True):
+            return Response({'detail': 'Success change password'}, status.HTTP_202_ACCEPTED)
+
+        serializer.save()
+
+        return Response({'detail': 'Not a valid token'}, status.HTTP_400_BAD_REQUEST)
